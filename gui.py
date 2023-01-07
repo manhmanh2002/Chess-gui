@@ -74,7 +74,7 @@ def highlight_square(screen, chess_state, valid_moves, square_selected):
                 screen.blit(s, (move[1] * SQ_SIZE, move[0] * SQ_SIZE))
 
 def main():
-
+    #màn hình menu game
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess")
     BG = pygame.image.load("assets/Background.png")
@@ -86,11 +86,11 @@ def main():
         MENU_TEXT = get_font(100).render("CHESS", True, "#b68f40")
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 100))
         COMPUTER_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(640, 250), 
-                            text_input="COMPUTER", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+                            text_input="COMPUTER", font=get_font(40), base_color="#d7fcd4", hovering_color="White") #computer mode
         PVP_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(640, 400), 
-                            text_input="PVP", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+                            text_input="PVP", font=get_font(40), base_color="#d7fcd4", hovering_color="White")  #pvp mode
         QUIT_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(640, 550), 
-                            text_input="QUIT", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+                            text_input="QUIT", font=get_font(40), base_color="#d7fcd4", hovering_color="White") #quit window
         SCREEN.blit(MENU_TEXT, MENU_RECT)
         for button in [QUIT_BUTTON, COMPUTER_BUTTON, PVP_BUTTON]:
             button.changeColor(MENU_MOUSE_POS)
@@ -119,11 +119,35 @@ def Pvp_mode():
     player_clicks = []  # theo dõi các lần nhấp của người chơi (hai người)
     valid_moves = []
     game_over = False
+    BG = pygame.image.load("assets/Background.png")
     while running:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        MOUSE_POS = pygame.mouse.get_pos()
+        UNDO_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 250), 
+                    text_input="UNDO", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        RESTART_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 400), 
+                    text_input="RESTART", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 550), 
+                    text_input="BACK", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        for button in [UNDO_BUTTON, RESTART_BUTTON, BACK_BUTTON]:
+            button.changeColor(MOUSE_POS)
+            button.update(SCREEN)
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if RESTART_BUTTON.checkForInput(MOUSE_POS):
+                    game_over = False
+                    chess_state = chess_engine.chess_state()
+                    valid_moves = []
+                    square_selected = ()
+                    player_clicks = []
+                    valid_moves = []
+                elif UNDO_BUTTON.checkForInput(MOUSE_POS):
+                    chess_state.undo_move()
+                elif BACK_BUTTON.checkForInput(MOUSE_POS):
+                    main()
+                pygame.display.update() 
+            if event.type == pygame.QUIT:
                 running = False
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game_over:
                     location = pygame.mouse.get_pos()
                     col = location[0] // SQ_SIZE
@@ -148,18 +172,8 @@ def Pvp_mode():
                     else:
                         valid_moves = chess_state.get_valid_moves((row, col))
                         if valid_moves == None:
-                            valid_moves = []
-            #elif e.type == pygame.MOUSEBUTTONDOWN:
-            #     if e.ui_element == button_layout_rect:
-            #        game_over = False
-            #        chess_state = chess_engine.chess_state()
-            #        valid_moves = []
-            #        square_selected = ()
-            #        player_clicks = []
-            #        valid_moves = []
-            #    #elif e.key == pygame.K_u:
-            #    #    chess_state.undo_move()
-            #    #    print(len(chess_state.move_log))
+                            valid_moves = [] 
+          
         draw_chess_state(SCREEN, chess_state, valid_moves, square_selected)
         endgame = chess_state.checkmate_stalemate_checker()
         if endgame == 0:
@@ -175,13 +189,13 @@ def Pvp_mode():
         pygame.display.flip()
 
 def Computer_menu():
-    SCREEN2 = pygame.display.set_mode((WIDTH, HEIGHT))
+    SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Duy đầu buồi")
     BG = pygame.image.load("assets/Background.png")
     icon = pygame.image.load("assets/icon.jfif")
     pygame.display.set_icon(icon)
     while(True):
-        SCREEN2.blit(BG, (0, 0))
+        SCREEN.blit(BG, (0, 0))
         MENU_MOUSE_POS = pygame.mouse.get_pos()
         MENU_TEXT = get_font(100).render("CHESS", True, "#b68f40")
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 100))
@@ -191,10 +205,10 @@ def Computer_menu():
                             text_input="WHITE", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
         BACK_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(640, 550), 
                             text_input="BACK", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
-        SCREEN2.blit(MENU_TEXT, MENU_RECT)
+        SCREEN.blit(MENU_TEXT, MENU_RECT)
         for button in [BLACK_BUTTON, WHITE_BUTTON, BACK_BUTTON]:
             button.changeColor(MENU_MOUSE_POS)
-            button.update(SCREEN2)
+            button.update(SCREEN)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -207,9 +221,6 @@ def Computer_menu():
                 if WHITE_BUTTON.checkForInput(MENU_MOUSE_POS):
                     Computer_mode(white)
         pygame.display.update()
-    
-
-    pygame.display.update()
 
 def Computer_mode(mode):
     human_player = ""
@@ -227,7 +238,7 @@ def Computer_mode(mode):
     player_clicks = []  # theo dõi các lần nhấp của người chơi (hai bộ)
     valid_moves = []
     game_over = False
-
+    BG = pygame.image.load("assets/Background.png")
     ai = ai_engine.chess_ai()
     chess_state = chess_engine.chess_state()
     if human_player == 'b':
@@ -235,10 +246,28 @@ def Computer_mode(mode):
         chess_state.move_piece(ai_move[0], ai_move[1], True)
 
     while running:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        MOUSE_POS = pygame.mouse.get_pos()
+        UNDO_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 250), 
+                            text_input="UNDO", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        RESTART_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 400), 
+                            text_input="RESTART", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        BACK_BUTTON = Button(image=pygame.image.load("assets/Rect.png"), pos=(1000, 550), 
+                    text_input="BACK", font=get_font(40), base_color="#d7fcd4", hovering_color="White")
+        for button in [UNDO_BUTTON, RESTART_BUTTON,BACK_BUTTON]:
+            button.changeColor(MOUSE_POS)
+            button.update(SCREEN)
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if RESTART_BUTTON.checkForInput(MOUSE_POS):
+                    Computer_menu()
+                elif UNDO_BUTTON.checkForInput(MOUSE_POS):
+                    chess_state.undo_move()
+                elif BACK_BUTTON.checkForInput(MOUSE_POS):
+                    main()
+                pygame.display.update()  
+            if event.type == pygame.QUIT:
                 running = False
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game_over:
                     location = pygame.mouse.get_pos()
                     col = location[0] // SQ_SIZE
@@ -271,19 +300,7 @@ def Computer_mode(mode):
                         valid_moves = chess_state.get_valid_moves((row, col))
                         if valid_moves == None:
                             valid_moves = []
-            #elif e.type == pygame.MOUSEBUTTONDOWN:
-            #    if e.ui_element == button_layout_rect:
-            #        game_over = False
-            #        chess_state = chess_engine.chess_state()
-            #        valid_moves = []
-            #        square_selected = ()
-            #        player_clicks = []
-            #        valid_moves = []
-            #    #elif e.key == py.K_u:
-            #    #    chess_state.undo_move()
-            #    #    print(len(chess_state.move_log))
         draw_chess_state(SCREEN, chess_state, valid_moves, square_selected)
-
         endgame = chess_state.checkmate_stalemate_checker()
         if endgame == 0:
             game_over = True
@@ -296,14 +313,13 @@ def Computer_mode(mode):
             draw_text(SCREEN, "Stalemate.")
         clock.tick(MAX_FPS)
         pygame.display.flip()
-    
+
 def draw_text(screen, text):
     font = pygame.font.Font("assets/font.ttf", 32)
     text_object = font.render(text, False, pygame.Color("Black"))
     text_location = pygame.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - text_object.get_width() / 2,
                                                       HEIGHT / 2 - text_object.get_height() / 2)
     screen.blit(text_object, text_location)
-
-
+        
 if __name__ == "__main__":
     main()

@@ -417,7 +417,7 @@ class chess_state:
     def undo_move(self):
         if self.move_log:
             undoing_move = self.move_log.pop()
-            if undoing_move.castled is True:
+            if undoing_move.castled == True:
                 self.board[undoing_move.starting_square_row][
                     undoing_move.starting_square_col] = undoing_move.moving_piece
                 self.board[undoing_move.ending_square_row][undoing_move.ending_square_col] = undoing_move.removed_piece
@@ -445,7 +445,7 @@ class chess_state:
                     elif undoing_move.rock_starting_square[1] == 7:
                         self.black_king_can_castle[0] = True
                         self.black_king_can_castle[2] = True
-            elif undoing_move.pawn_promoted is True:
+            elif undoing_move.pawn_promoted == True:
                 self.board[undoing_move.starting_square_row][
                     undoing_move.starting_square_col] = undoing_move.moving_piece
                 self.get_piece(undoing_move.starting_square_row, undoing_move.starting_square_col).change_row_number(
@@ -459,7 +459,7 @@ class chess_state:
                         undoing_move.ending_square_row)
                     self.get_piece(undoing_move.ending_square_row, undoing_move.ending_square_col).change_col_number(
                         undoing_move.ending_square_col)
-            elif undoing_move.en_passaned is True:
+            elif undoing_move.en_passaned == True:
                 self.board[undoing_move.starting_square_row][
                     undoing_move.starting_square_col] = undoing_move.moving_piece
                 self.board[undoing_move.ending_square_row][undoing_move.ending_square_col] = undoing_move.removed_piece
