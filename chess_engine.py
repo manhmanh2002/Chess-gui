@@ -12,11 +12,9 @@ r \ c     0           1           2           3           4           5         
 6   [(r=6, c=0), (r=6, c=1), (r=6, c=2), (r=6, c=3), (r=6, c=4), (r=6, c=5), (r=6, c=6), (r=6, c=7)]
 7   [(r=7, c=0), (r=7, c=1), (r=7, c=2), (r=7, c=3), (r=7, c=4), (r=7, c=5), (r=7, c=6), (r=7, c=7)]
 '''
-class game_state:
-    # Initialize 2D array to represent the chess board
+class chess_state:
+    # khởi tạo mảng 2D để biểu diễn bàn cờ
     def __init__(self):
-        # The board is a 2D array
-        # TODO: Change to a numpy format later
         self.white_captives = []
         self.black_captives = []
         self.move_log = []
@@ -31,10 +29,10 @@ class game_state:
         self._black_king_location = [7, 3]
 
         self.white_king_can_castle = [True, True,
-                                      True]  # Has king not moved, has Rock1(col=0) not moved, has Rock2(col=7) not moved
+                                      True]  # quân vua không di chuyển có biến Rock1(col=0) không di chuyển, biến Rock2(col=7) không di chuyển
         self.black_king_can_castle = [True, True, True]
 
-        # Initialize White pieces
+        # khởi tạo quân trắng
         white_rock_1 = Rock('r', 0, 0, Player.PLAYER_1)
         white_rock_2 = Rock('r', 0, 7, Player.PLAYER_1)
         white_knight_1 = Knight('n', 0, 1, Player.PLAYER_1)
@@ -56,7 +54,7 @@ class game_state:
                              white_pawn_5,
                              white_pawn_6, white_pawn_7, white_pawn_8]
 
-        # Initialize Black Pieces
+        # khởi tạo quân đen
         black_rock_1 = Rock('r', 7, 0, Player.PLAYER_2)
         black_rock_2 = Rock('r', 7, 7, Player.PLAYER_2)
         black_knight_1 = Knight('n', 7, 1, Player.PLAYER_2)
@@ -106,11 +104,6 @@ class game_state:
         return (evaluated_piece is not None) and (evaluated_piece != Player.EMPTY)
 
     def get_valid_moves(self, starting_square):
-        '''
-        remove pins from valid moves (unless the pinned piece move can get rid of a check and checks is empty
-        remove move from valid moves if the move falls within a check piece's valid move
-        if the moving piece is a king, the ending square cannot be in a check
-        '''
 
         current_row = starting_square[0]
         current_col = starting_square[1]
@@ -128,7 +121,7 @@ class game_state:
             pinned_checks = group[2]
             initial_valid_piece_moves = moving_piece.get_valid_piece_moves(self)
 
-            # immediate check
+            # chiếu tướng
             if checking_pieces:
                 for move in initial_valid_piece_moves:
                     can_move = True
@@ -161,7 +154,7 @@ class game_state:
                     if can_move:
                         valid_moves.append(move)
                 self._is_check = True
-            # pinned checks
+            # kiểm tra có di chuyển hay không
             elif pinned_pieces and moving_piece.get_name() != "k":
                 if starting_square not in pinned_pieces:
                     for move in initial_valid_piece_moves:
@@ -194,7 +187,7 @@ class game_state:
         else:
             return None
 
-    # 0 if white lost, 1 if black lost, 2 if stalemate, 3 if not game over
+    # 0 nếu trắng thua, 1 nếu đen thua, 2 if hòa, 3 if không kết thúc
     def checkmate_stalemate_checker(self):
         all_white_moves = self.get_all_legal_moves(Player.PLAYER_1)
         all_black_moves = self.get_all_legal_moves(Player.PLAYER_2)
@@ -252,7 +245,7 @@ class game_state:
 
     def promote_pawn_ai(self, starting_square, moved_piece, ending_square):
         move = chess_move(starting_square, ending_square, self, self._is_check)
-        # The ai can only promote the pawn to queen
+        # phong tốt thành hậu
         new_piece = Queen("q", ending_square[0], ending_square[1], moved_piece.get_player())
         self.board[ending_square[0]][ending_square[1]] = new_piece
         self.board[moved_piece.get_row_number()][moved_piece.get_col_number()] = Player.EMPTY
@@ -261,24 +254,18 @@ class game_state:
         move.pawn_promotion_move(new_piece)
         self.move_log.append(move)
 
-    # have to fix en passant for ai
     def can_en_passant(self, current_square_row, current_square_col):
         return False
-        # if is_ai:
-        #     return False
-        # else:
-        #     return self.can_en_passant_bool and current_square_row == self.previous_piece_en_passant()[0] \
-        #            and abs(current_square_col - self.previous_piece_en_passant()[1]) == 1
 
     def previous_piece_en_passant(self):
         return self._en_passant_previous
 
-    # Move a piece
+    # di chuyển quân
     def move_piece(self, starting_square, ending_square, is_ai):
-        current_square_row = starting_square[0]  # The integer row value of the starting square
-        current_square_col = starting_square[1]  # The integer col value of the starting square
-        next_square_row = ending_square[0]  # The integer row value of the ending square
-        next_square_col = ending_square[1]  # The integer col value of the ending square
+        current_square_row = starting_square[0] 
+        current_square_col = starting_square[1]  
+        next_square_row = ending_square[0]  
+        next_square_col = ending_square[1]  
 
         if self.is_valid_piece(current_square_row, current_square_col) and \
                 (((self.whose_turn() and self.get_piece(current_square_row, current_square_col).is_player(
@@ -286,7 +273,7 @@ class game_state:
                   (not self.whose_turn() and self.get_piece(current_square_row, current_square_col).is_player(
                       Player.PLAYER_2)))):
 
-            # The chess piece at the starting square
+            # các quân cờ ở trạng thái ban đầu
             moving_piece = self.get_piece(current_square_row, current_square_col)
 
             valid_moves = self.get_valid_moves(starting_square)
@@ -303,7 +290,7 @@ class game_state:
                             move.castling_move((0, 0), (0, 2), self)
                             self.move_log.append(move)
 
-                            # move Rock
+                            # di chuyển quân xe
                             self.get_piece(0, 0).change_col_number(2)
 
                             self.board[0][2] = self.board[0][0]
@@ -317,7 +304,7 @@ class game_state:
                             move = chess_move(starting_square, ending_square, self, self._is_check)
                             move.castling_move((0, 7), (0, 4), self)
                             self.move_log.append(move)
-                            # move Rock
+                            # di chuyển xe
                             self.get_piece(0, 7).change_col_number(4)
 
                             self.board[0][4] = self.board[0][7]
@@ -338,7 +325,7 @@ class game_state:
                             self.move_log.append(move)
 
                             self.get_piece(7, 0).change_col_number(2)
-                            # move Rock
+                            # di chuyển xe
                             self.board[7][2] = self.board[7][0]
                             self.board[7][0] = Player.EMPTY
 
@@ -352,7 +339,7 @@ class game_state:
 
                             self.get_piece(0, 7).change_col_number(4)
 
-                            # move Rock
+                            # di chuyển xe
                             self.board[7][4] = self.board[7][7]
                             self.board[7][7] = Player.EMPTY
 
@@ -363,7 +350,6 @@ class game_state:
                             self.move_log.append(move)
                             self.black_king_can_castle[0] = False
                         self._black_king_location = (next_square_row, next_square_col)
-                        # self.can_en_passant_bool = False  WHAT IS THIS
                 elif moving_piece.get_name() == "r":
                     if moving_piece.is_player(Player.PLAYER_1) and current_square_col == 0:
                         self.white_king_can_castle[1] = False
@@ -375,36 +361,28 @@ class game_state:
                         self.white_king_can_castle[2] = False
                     self.move_log.append(chess_move(starting_square, ending_square, self, self._is_check))
                     self.can_en_passant_bool = False
-                # Add move class here
                 elif moving_piece.get_name() == "p":
-                    # Promoting white pawn
+                    # thăng tốt trắng
                     if moving_piece.is_player(Player.PLAYER_1) and next_square_row == 7:
-                        # print("promoting white pawn")
                         if is_ai:
                             self.promote_pawn_ai(starting_square, moving_piece, ending_square)
                         else:
                             self.promote_pawn(starting_square, moving_piece, ending_square)
                         temp = False
-                    # Promoting black pawn
+                    # thăng tốt đen
                     elif moving_piece.is_player(Player.PLAYER_2) and next_square_row == 0:
-                        # print("promoting black pawn")
                         if is_ai:
                             self.promote_pawn_ai(starting_square, moving_piece, ending_square)
                         else:
                             self.promote_pawn(starting_square, moving_piece, ending_square)
                         temp = False
-                    # Moving pawn forward by two
-                    # Problem with Pawn en passant ai
+                    # đi tốt 2 bước
                     elif abs(next_square_row - current_square_row) == 2 and current_square_col == next_square_col:
-                        # print("move pawn forward")
                         self.move_log.append(chess_move(starting_square, ending_square, self, self._is_check))
-                        # self.can_en_passant_bool = True
                         self._en_passant_previous = (next_square_row, next_square_col)
-                    # en passant
                     elif abs(next_square_row - current_square_row) == 1 and abs(
                             current_square_col - next_square_col) == 1 and \
                             self.can_en_passant(current_square_row, current_square_col):
-                        # print("en passant")
                         if moving_piece.is_player(Player.PLAYER_1):
                             move = chess_move(starting_square, ending_square, self, self._is_check)
                             move.en_passant_move(self.board[next_square_row - 1][next_square_col],
@@ -417,7 +395,7 @@ class game_state:
                                                  (next_square_row + 1, next_square_col))
                             self.move_log.append(move)
                             self.board[next_square_row + 1][next_square_col] = Player.EMPTY
-                    # moving forward by one or taking a piece
+                    # đi lên 1 hoặc ăn chéo
                     else:
                         self.move_log.append(chess_move(starting_square, ending_square, self, self._is_check))
                         self.can_en_passant_bool = False
@@ -509,31 +487,18 @@ class game_state:
                         undoing_move.ending_square_col)
 
             self.white_turn = not self.white_turn
-            # if undoing_move.in_check:
-            #     self._is_check = True
+          
             if undoing_move.moving_piece.get_name() == 'k' and undoing_move.moving_piece.get_player() == Player.PLAYER_1:
                 self._white_king_location = (undoing_move.starting_square_row, undoing_move.starting_square_col)
             elif undoing_move.moving_piece.get_name() == 'k' and undoing_move.moving_piece.get_player() == Player.PLAYER_2:
                 self._black_king_location = (undoing_move.starting_square_row, undoing_move.starting_square_col)
 
             return undoing_move
-    # true if white, false if black
+    # True nếu là quân trắng, False nếu là quân đen
     def whose_turn(self):
         return self.white_turn
 
-    '''
-    check for immediate check
-    - check 8 directions and 8 knight squares
-    check for pins
-    - whatever blocked from above is a pin
-    
-     - if immediate check, change check value to true
-     - list valid moves to prevent check but not remove pin
-     - if there are no valid moves to prevent check, checkmate
-    '''
-
     def check_for_check(self, king_location, player):
-        # self._is_check = False
         _checks = []
         _pins = []
         _pins_check = []
@@ -546,7 +511,7 @@ class game_state:
         _left = 1
         _right = 1
 
-        # Left of the king
+        # trái quân vua
         _possible_pin = ()
         while king_location_col - _left >= 0 and self.get_piece(king_location_row,
                                                                 king_location_col - _left) != None:
@@ -572,12 +537,11 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row,
                                                                                 king_location_col - _left).get_valid_piece_takes(
                             self):
-                        # self._is_check = True
                         _checks.append((king_location_row, king_location_col - _left))
                 break
             _left += 1
 
-        # right of the king
+        # phải quân vua
         _possible_pin = ()
         while king_location_col + _right < 8 and self.get_piece(king_location_row,
                                                                 king_location_col + _right) != None:
@@ -603,12 +567,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row,
                                                                                 king_location_col + _right).get_valid_piece_takes(
                             self):
-                        # self._is_check = True
+    
                         _checks.append((king_location_row, king_location_col + _right))
                 break
             _right += 1
 
-        # below the king
+        # bên dưới vua
         _possible_pin = ()
         while king_location_row + _down < 8 and self.get_piece(king_location_row + _down,
                                                                king_location_col) != None:
@@ -634,12 +598,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row + _down,
                                                                                 king_location_col).get_valid_piece_takes(
                         self):
-                        # self._is_check = True
+                       
                         _checks.append((king_location_row + _down, king_location_col))
                 break
             _down += 1
 
-        # above the king
+        # bên trên quân vua
         _possible_pin = ()
         while king_location_row - _up >= 0 and self.get_piece(king_location_row - _up, king_location_col) != None:
             if self.is_valid_piece(king_location_row - _up, king_location_col) and \
@@ -664,12 +628,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row - _up,
                                                                                 king_location_col).get_valid_piece_takes(
                             self):
-                        # self._is_check = True
+                    
                         _checks.append((king_location_row - _up, king_location_col))
                 break
             _up += 1
 
-        # left up
+        # di chuyển sang trái
         _up = 1
         _left = 1
         _possible_pin = ()
@@ -697,13 +661,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row - _up,
                                                                                 king_location_col - _left).get_valid_piece_takes(
                         self):
-                        # self._is_check = True
                         _checks.append((king_location_row - _up, king_location_col - _left))
                 break
             _left += 1
             _up += 1
 
-        # right up
+        # di chuyển sang phải
         _up = 1
         _right = 1
         _possible_pin = ()
@@ -731,13 +694,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row - _up,
                                                                                 king_location_col + _right).get_valid_piece_takes(
                         self):
-                        # self._is_check = True
                         _checks.append((king_location_row - _up, king_location_col + _right))
                 break
             _right += 1
             _up += 1
 
-        # left down
+        # di chuyển dưới
         _down = 1
         _left = 1
         _possible_pin = ()
@@ -765,13 +727,12 @@ class game_state:
                     if (king_location_row, king_location_col) in self.get_piece(king_location_row + _down,
                                                                                 king_location_col - _left).get_valid_piece_takes(
                         self):
-                        # self._is_check = True
                         _checks.append((king_location_row + _down, king_location_col - _left))
                 break
             _left += 1
             _down += 1
 
-        # right down
+        # chéo phải dưới
         _down = 1
         _right = 1
         _possible_pin = ()
@@ -805,7 +766,7 @@ class game_state:
             _right += 1
             _down += 1
 
-        # knights
+        # mã
         row_change = [-2, -2, -1, -1, +1, +1, +2, +2]
         col_change = [-1, +1, -2, +2, -2, +2, +1, -1]
         for i in range(0, 8):
@@ -815,23 +776,21 @@ class game_state:
                 if (king_location_row, king_location_col) in self.get_piece(king_location_row + row_change[i],
                                                                             king_location_col + col_change[
                                                                                 i]).get_valid_piece_takes(self):
-                    # self._is_check = True
                     _checks.append((king_location_row + row_change[i], king_location_col + col_change[i]))
-        # print([_checks, _pins, _pins_check])
         return [_checks, _pins, _pins_check]
 
 
 class chess_move():
-    def __init__(self, starting_square, ending_square, game_state, in_check):
+    def __init__(self, starting_square, ending_square, chess_state, in_check):
         self.starting_square_row = starting_square[0]
         self.starting_square_col = starting_square[1]
-        self.moving_piece = game_state.get_piece(self.starting_square_row, self.starting_square_col)
+        self.moving_piece = chess_state.get_piece(self.starting_square_row, self.starting_square_col)
         self.in_check = in_check
 
         self.ending_square_row = ending_square[0]
         self.ending_square_col = ending_square[1]
-        if game_state.is_valid_piece(self.ending_square_row, self.ending_square_col):
-            self.removed_piece = game_state.get_piece(self.ending_square_row, self.ending_square_col)
+        if chess_state.is_valid_piece(self.ending_square_row, self.ending_square_col):
+            self.removed_piece = chess_state.get_piece(self.ending_square_row, self.ending_square_col)
         else:
             self.removed_piece = Player.EMPTY
 
@@ -847,11 +806,11 @@ class chess_move():
         self.en_passant_eaten_piece = None
         self.en_passant_eaten_square = None
 
-    def castling_move(self, rock_starting_square, rock_ending_square, game_state):
+    def castling_move(self, rock_starting_square, rock_ending_square, chess_state):
         self.castled = True
         self.rock_starting_square = rock_starting_square
         self.rock_ending_square = rock_ending_square
-        self.moving_rock = game_state.get_piece(rock_starting_square[0], rock_starting_square[1])
+        self.moving_rock = chess_state.get_piece(rock_starting_square[0], rock_starting_square[1])
 
     def pawn_promotion_move(self, new_piece):
         self.pawn_promoted = True

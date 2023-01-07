@@ -2,80 +2,72 @@ import sys
 from button import Button
 import chess_engine
 import pygame 
-import pygame_gui as py_gui
 import ai_engine
 from enums import Player
 
-# GOBAL VARIABLES
 WIDTH = 1280 
-HEIGHT = 720  # width and height of the chess board
-DIMENSION = 8  # the dimensions of the chess board
-SQ_SIZE = HEIGHT // DIMENSION  # the size of each of the squares in the board
-MAX_FPS = 60  # FPS for animations
-IMAGES = {}  # images for the chess pieces
+HEIGHT = 720  # chiều rộng và chiều cao của bàn cờ
+DIMENSION = 8 # kích thước của bàn cờ vua
+SQ_SIZE = HEIGHT // DIMENSION  # kích thước của mỗi ô vuông trong bảng
+MAX_FPS = 60  # khung hình
+IMAGES = {}  # ảnh cho mỗi quân cờ
 colors = [pygame.Color("white"), pygame.Color("gray")]
 pygame.init()
 black = "b"
 white = "w"
 
-def get_font(size): # Returns Press-Start-2P in the desired size
+def get_font(size): # Trả về Press-Start-2P ở kích thước mong muốn
 
     return pygame.font.Font("assets/font.ttf", size)
 def load_images():
     '''
-    Load images for the chess pieces
+    Tải hình ảnh bàn cờ
     '''
     for p in Player.PIECES:
         IMAGES[p] = pygame.transform.scale(pygame.image.load("images/" + p + ".png"), (SQ_SIZE, SQ_SIZE))
 
-def draw_game_state(screen, game_state, valid_moves, square_selected):
-    ''' Draw the complete chess board with pieces
-
-    Keyword arguments:
-        :param screen       -- the pygame screen
-        :param game_state   -- the state of the current chess game
+def draw_chess_state(screen, chess_state, valid_moves, square_selected):
+    ''' 
+    vẽ hoàn chỉnh bàn cờ với các quân cờ
     '''
     draw_squares(screen)
-    highlight_square(screen, game_state, valid_moves, square_selected)
-    draw_pieces(screen, game_state)
+    highlight_square(screen, chess_state, valid_moves, square_selected)
+    draw_pieces(screen, chess_state)
 
 def draw_squares(screen):
-    ''' Draw the chess board with the alternating two colors
-
-    :param screen:          -- the pygame screen
+    ''' 
+    vẽ bàn cờ với 2 màu đen trắng
     '''
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[(r + c) % 2]
             pygame.draw.rect(screen, color, pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-def draw_pieces(screen, game_state):
-    ''' Draw the chess pieces onto the board
-
-    :param screen:          -- the pygame screen
-    :param game_state:      -- the current state of the chess game
+def draw_pieces(screen, chess_state):
+    ''' 
+    vẽ các quân cờ lên bàn cờ
     '''
     for r in range(DIMENSION):
         for c in range(DIMENSION):
-            piece = game_state.get_piece(r, c)
+            piece = chess_state.get_piece(r, c)
             if piece is not None and piece != Player.EMPTY:
                 screen.blit(IMAGES[piece.get_player() + "_" + piece.get_name()],
                             pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-def highlight_square(screen, game_state, valid_moves, square_selected):
-    if square_selected != () and game_state.is_valid_piece(square_selected[0], square_selected[1]):
+def highlight_square(screen, chess_state, valid_moves, square_selected):
+    if square_selected != () and chess_state.is_valid_piece(square_selected[0], square_selected[1]):
         row = square_selected[0]
         col = square_selected[1]
 
-        if (game_state.whose_turn() and game_state.get_piece(row, col).is_player(Player.PLAYER_1)) or \
-                (not game_state.whose_turn() and game_state.get_piece(row, col).is_player(Player.PLAYER_2)):
-            # hightlight selected square
+        if (chess_state.whose_turn() and chess_state.get_piece(row, col).is_player(Player.PLAYER_1)) or \
+                (not chess_state.whose_turn() and chess_state.get_piece(row, col).is_player(Player.PLAYER_2)):
+            # bôi đậm ô vuông được chọn
             s = pygame.Surface((SQ_SIZE, SQ_SIZE))
             s.set_alpha(100)
             s.fill(pygame.Color("blue"))
             screen.blit(s, (col * SQ_SIZE, row * SQ_SIZE))
 
-            # highlight move squares
+            # bôi đậm ô vuông có thể di chuyển
             s.fill(pygame.Color("green"))
 
             for move in valid_moves:
@@ -84,7 +76,7 @@ def highlight_square(screen, game_state, valid_moves, square_selected):
 def main():
 
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Duy đầu buồi")
+    pygame.display.set_caption("Chess")
     BG = pygame.image.load("assets/Background.png")
     icon = pygame.image.load("assets/icon.jfif")
     pygame.display.set_icon(icon)
@@ -120,11 +112,11 @@ def main():
 def Pvp_mode():
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-    game_state = chess_engine.game_state()
+    chess_state = chess_engine.chess_state()
     load_images()
     running = True
-    square_selected = ()  # keeps track of the last selected square
-    player_clicks = []  # keeps track of player clicks (two tuples)
+    square_selected = ()  # theo dõi hình vuông được chọn cuối cùng
+    player_clicks = []  # theo dõi các lần nhấp của người chơi (hai người)
     valid_moves = []
     game_over = False
     while running:
@@ -143,34 +135,33 @@ def Pvp_mode():
                         square_selected = (row, col)
                         player_clicks.append(square_selected)
                     if len(player_clicks) == 2:
-                        # this if is useless right now
                         if (player_clicks[1][0], player_clicks[1][1]) not in valid_moves:
                             square_selected = ()
                             player_clicks = []
                             valid_moves = []
                         else:
-                            game_state.move_piece((player_clicks[0][0], player_clicks[0][1]),
+                            chess_state.move_piece((player_clicks[0][0], player_clicks[0][1]),
                                                   (player_clicks[1][0], player_clicks[1][1]), False)
                             square_selected = ()
                             player_clicks = []
                             valid_moves = []
                     else:
-                        valid_moves = game_state.get_valid_moves((row, col))
+                        valid_moves = chess_state.get_valid_moves((row, col))
                         if valid_moves == None:
                             valid_moves = []
             #elif e.type == pygame.MOUSEBUTTONDOWN:
             #     if e.ui_element == button_layout_rect:
             #        game_over = False
-            #        game_state = chess_engine.game_state()
+            #        chess_state = chess_engine.chess_state()
             #        valid_moves = []
             #        square_selected = ()
             #        player_clicks = []
             #        valid_moves = []
             #    #elif e.key == pygame.K_u:
-            #    #    game_state.undo_move()
-            #    #    print(len(game_state.move_log))
-        draw_game_state(SCREEN, game_state, valid_moves, square_selected)
-        endgame = game_state.checkmate_stalemate_checker()
+            #    #    chess_state.undo_move()
+            #    #    print(len(chess_state.move_log))
+        draw_chess_state(SCREEN, chess_state, valid_moves, square_selected)
+        endgame = chess_state.checkmate_stalemate_checker()
         if endgame == 0:
             game_over = True
             draw_text(SCREEN, "Black wins.")
@@ -229,19 +220,19 @@ def Computer_mode(mode):
     pygame.init()
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-    game_state = chess_engine.game_state()
+    chess_state = chess_engine.chess_state()
     load_images()
     running = True
-    square_selected = ()  # keeps track of the last selected square
-    player_clicks = []  # keeps track of player clicks (two tuples)
+    square_selected = ()  # theo dõi hình vuông được chọn cuối cùng
+    player_clicks = []  # theo dõi các lần nhấp của người chơi (hai bộ)
     valid_moves = []
     game_over = False
 
     ai = ai_engine.chess_ai()
-    game_state = chess_engine.game_state()
+    chess_state = chess_engine.chess_state()
     if human_player == 'b':
-        ai_move = ai.minimax_black(game_state, 3, -100000, 100000, True, Player.PLAYER_1)
-        game_state.move_piece(ai_move[0], ai_move[1], True)
+        ai_move = ai.minimax_black(chess_state, 3, -100000, 100000, True, Player.PLAYER_1)
+        chess_state.move_piece(ai_move[0], ai_move[1], True)
 
     while running:
         for e in pygame.event.get():
@@ -259,42 +250,41 @@ def Computer_mode(mode):
                         square_selected = (row, col)
                         player_clicks.append(square_selected)
                     if len(player_clicks) == 2:
-                        # this if is useless right now
                         if (player_clicks[1][0], player_clicks[1][1]) not in valid_moves:
                             square_selected = ()
                             player_clicks = []
                             valid_moves = []
                         else:
-                            game_state.move_piece((player_clicks[0][0], player_clicks[0][1]),
+                            chess_state.move_piece((player_clicks[0][0], player_clicks[0][1]),
                                                   (player_clicks[1][0], player_clicks[1][1]), False)
                             square_selected = ()
                             player_clicks = []
                             valid_moves = []
 
                             if human_player == 'w':
-                                ai_move = ai.minimax_white(game_state, 3, -100000, 100000, True, Player.PLAYER_2)
-                                game_state.move_piece(ai_move[0], ai_move[1], True)
+                                ai_move = ai.minimax_white(chess_state, 3, -100000, 100000, True, Player.PLAYER_2)
+                                chess_state.move_piece(ai_move[0], ai_move[1], True)
                             elif human_player == 'b':
-                                ai_move = ai.minimax_black(game_state, 3, -100000, 100000, True, Player.PLAYER_1)
-                                game_state.move_piece(ai_move[0], ai_move[1], True)
+                                ai_move = ai.minimax_black(chess_state, 3, -100000, 100000, True, Player.PLAYER_1)
+                                chess_state.move_piece(ai_move[0], ai_move[1], True)
                     else:
-                        valid_moves = game_state.get_valid_moves((row, col))
+                        valid_moves = chess_state.get_valid_moves((row, col))
                         if valid_moves == None:
                             valid_moves = []
             #elif e.type == pygame.MOUSEBUTTONDOWN:
             #    if e.ui_element == button_layout_rect:
             #        game_over = False
-            #        game_state = chess_engine.game_state()
+            #        chess_state = chess_engine.chess_state()
             #        valid_moves = []
             #        square_selected = ()
             #        player_clicks = []
             #        valid_moves = []
             #    #elif e.key == py.K_u:
-            #    #    game_state.undo_move()
-            #    #    print(len(game_state.move_log))
-        draw_game_state(SCREEN, game_state, valid_moves, square_selected)
+            #    #    chess_state.undo_move()
+            #    #    print(len(chess_state.move_log))
+        draw_chess_state(SCREEN, chess_state, valid_moves, square_selected)
 
-        endgame = game_state.checkmate_stalemate_checker()
+        endgame = chess_state.checkmate_stalemate_checker()
         if endgame == 0:
             game_over = True
             draw_text(SCREEN, "Black wins.")
